@@ -404,7 +404,9 @@ function Auxiliary.SynMixTarget(f1,f2,f3,f4,minc,maxc,gc)
 				for i=0,maxc-1 do
 					local mg2=mg:Clone()
 					if f4 then
-						mg2=mg2:Filter(f4,nil,c)
+						mg2=mg2:Filter(f4,g,c)
+					else
+						mg2:Sub(g)
 					end
 					local cg=mg2:Filter(Auxiliary.SynMixCheckRecursive,g4,tp,g4,mg2,i,minc,maxc,c,g,smat,gc)
 					if cg:GetCount()==0 then break end
@@ -458,15 +460,14 @@ function Auxiliary.SynMixFilter4(c,f4,minc,maxc,syncard,mg1,smat,c1,c2,c3,gc)
 	if c3 then sg:AddCard(c3) end
 	local mg=mg1:Clone()
 	if f4 then
-		mg=mg:Filter(f4,nil,syncard)
+		mg=mg:Filter(f4,sg,syncard)
+	else
+		mg:Sub(sg)
 	end
 	return aux.SynMixCheck(mg,sg,minc-1,maxc-1,syncard,smat,gc)
 end
 function Auxiliary.SynMixCheck(mg,sg1,minc,maxc,syncard,smat,gc)
 	local tp=syncard:GetControler()
-	for c in aux.Next(sg1) do
-		mg:RemoveCard(c)
-	end
 	local sg=Group.CreateGroup()
 	if minc==0 and Auxiliary.SynMixCheckGoal(tp,sg1,0,0,syncard,sg,smat,gc) then return true end
 	if maxc==0 then return false end
@@ -1379,14 +1380,14 @@ function Auxiliary.FShaddollOperation(attr)
 				Duel.SetFusionMaterial(g)
 			end
 end
-function Auxiliary.AddRitualProcUltimate(c,filter,level_function,greater_or_equal,summon_location,grave_filter)
+function Auxiliary.AddRitualProcUltimate(c,filter,level_function,greater_or_equal,summon_location,grave_filter,mat_filter)
 	summon_location=summon_location or LOCATION_HAND
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetTarget(Auxiliary.RitualUltimateTarget(filter,level_function,greater_or_equal,summon_location,grave_filter))
-	e1:SetOperation(Auxiliary.RitualUltimateOperation(filter,level_function,greater_or_equal,summon_location,grave_filter))
+	e1:SetTarget(Auxiliary.RitualUltimateTarget(filter,level_function,greater_or_equal,summon_location,grave_filter,mat_filter))
+	e1:SetOperation(Auxiliary.RitualUltimateOperation(filter,level_function,greater_or_equal,summon_location,grave_filter,mat_filter))
 	c:RegisterEffect(e1)
 	return e1
 end
@@ -1401,23 +1402,26 @@ function Auxiliary.RitualCheck(g,tp,c,lv,greater_or_equal)
 	return Auxiliary["RitualCheck"..greater_or_equal](g,c,lv) and Duel.GetMZoneCount(tp,g,tp)>0 and (not c.mat_group_check or c.mat_group_check(g,tp))
 end
 function Auxiliary.RitualUltimateFilter(c,filter,e,tp,m1,m2,level_function,greater_or_equal)
-	if bit.band(c:GetType(),0x81)~=0x81 or (filter and not filter(c)) or not c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,false,true) then return false end
+	if bit.band(c:GetType(),0x81)~=0x81 or (filter and not filter(c,e,tp)) or not c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,false,true) then return false end
 	local mg=m1:Filter(Card.IsCanBeRitualMaterial,c,c)
 	if m2 then
 		mg:Merge(m2)
 	end
 	if c.mat_filter then
-		mg=mg:Filter(c.mat_filter,nil)
+		mg=mg:Filter(c.mat_filter,c,tp)
+	else
+		mg:RemoveCard(c)
 	end
-	return mg:CheckSubGroup(Auxiliary.RitualCheck,1,63,tp,c,level_function(c),greater_or_equal)
+	return mg:CheckSubGroup(Auxiliary.RitualCheck,1,level_function(c),tp,c,level_function(c),greater_or_equal)
 end
 function Auxiliary.RitualExtraFilter(c,f)
 	return c:GetLevel()>0 and f(c) and c:IsType(TYPE_MONSTER) and c:IsAbleToRemove()
 end
-function Auxiliary.RitualUltimateTarget(filter,level_function,greater_or_equal,summon_location,grave_filter)
+function Auxiliary.RitualUltimateTarget(filter,level_function,greater_or_equal,summon_location,grave_filter,mat_filter)
 	return	function(e,tp,eg,ep,ev,re,r,rp,chk)
 				if chk==0 then
 					local mg=Duel.GetRitualMaterial(tp)
+					if mat_filter then mg=mg:Filter(mat_filter,nil,e,tp) end
 					local exg=nil
 					if grave_filter then
 						exg=Duel.GetMatchingGroup(Auxiliary.RitualExtraFilter,tp,LOCATION_GRAVE,0,nil,grave_filter)
@@ -1427,9 +1431,10 @@ function Auxiliary.RitualUltimateTarget(filter,level_function,greater_or_equal,s
 				Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,summon_location)
 			end
 end
-function Auxiliary.RitualUltimateOperation(filter,level_function,greater_or_equal,summon_location,grave_filter)
+function Auxiliary.RitualUltimateOperation(filter,level_function,greater_or_equal,summon_location,grave_filter,mat_filter)
 	return	function(e,tp,eg,ep,ev,re,r,rp)
 				local mg=Duel.GetRitualMaterial(tp)
+				if mat_filter then mg=mg:Filter(mat_filter,nil,e,tp) end
 				local exg=nil
 				if grave_filter then
 					exg=Duel.GetMatchingGroup(Auxiliary.RitualExtraFilter,tp,LOCATION_GRAVE,0,nil,grave_filter)
@@ -1443,10 +1448,12 @@ function Auxiliary.RitualUltimateOperation(filter,level_function,greater_or_equa
 						mg:Merge(exg)
 					end
 					if tc.mat_filter then
-						mg=mg:Filter(tc.mat_filter,nil)
+						mg=mg:Filter(tc.mat_filter,tc,tp)
+					else
+						mg:RemoveCard(tc)
 					end
 					Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-					local mat=mg:SelectSubGroup(tp,Auxiliary.RitualCheck,false,1,63,tp,tc,level_function(tc),greater_or_equal)
+					local mat=mg:SelectSubGroup(tp,Auxiliary.RitualCheck,false,1,level_function(tc),tp,tc,level_function(tc),greater_or_equal)
 					tc:SetMaterial(mat)
 					Duel.ReleaseRitualMaterial(mat)
 					Duel.BreakEffect()
@@ -1456,44 +1463,62 @@ function Auxiliary.RitualUltimateOperation(filter,level_function,greater_or_equa
 			end
 end
 --Ritual Summon, geq fixed lv
-function Auxiliary.AddRitualProcGreater(c,filter,summon_location,grave_filter)
-	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetOriginalLevel,"Greater",summon_location,grave_filter)
+function Auxiliary.AddRitualProcGreater(c,filter,summon_location,grave_filter,mat_filter)
+	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetOriginalLevel,"Greater",summon_location,grave_filter,mat_filter)
 end
-function Auxiliary.AddRitualProcGreaterCode(c,code1,summon_location,grave_filter)
+function Auxiliary.AddRitualProcGreaterCode(c,code1,summon_location,grave_filter,mat_filter)
 	if not c:IsStatus(STATUS_COPYING_EFFECT) and c.fit_monster==nil then
 		local mt=getmetatable(c)
 		mt.fit_monster={code1}
 	end
-	return Auxiliary.AddRitualProcGreater(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter)
+	return Auxiliary.AddRitualProcGreater(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter,mat_filter)
 end
 --Ritual Summon, equal to fixed lv
-function Auxiliary.AddRitualProcEqual(c,filter,summon_location,grave_filter)
-	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetOriginalLevel,"Equal",summon_location,grave_filter)
+function Auxiliary.AddRitualProcEqual(c,filter,summon_location,grave_filter,mat_filter)
+	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetOriginalLevel,"Equal",summon_location,grave_filter,mat_filter)
 end
-function Auxiliary.AddRitualProcEqualCode(c,code1,summon_location,grave_filter)
+function Auxiliary.AddRitualProcEqualCode(c,code1,summon_location,grave_filter,mat_filter)
 	if not c:IsStatus(STATUS_COPYING_EFFECT) and c.fit_monster==nil then
 		local mt=getmetatable(c)
 		mt.fit_monster={code1}
 	end
-	return Auxiliary.AddRitualProcEqual(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter)
+	return Auxiliary.AddRitualProcEqual(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter,mat_filter)
 end
 --Ritual Summon, equal to monster lv
-function Auxiliary.AddRitualProcEqual2(c,filter,summon_location,grave_filter)
-	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetLevel,"Equal",summon_location,grave_filter)
+function Auxiliary.AddRitualProcEqual2(c,filter,summon_location,grave_filter,mat_filter)
+	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetLevel,"Equal",summon_location,grave_filter,mat_filter)
 end
-function Auxiliary.AddRitualProcEqual2Code(c,code1,summon_location,grave_filter)
+function Auxiliary.AddRitualProcEqual2Code(c,code1,summon_location,grave_filter,mat_filter)
 	if not c:IsStatus(STATUS_COPYING_EFFECT) and c.fit_monster==nil then
 		local mt=getmetatable(c)
 		mt.fit_monster={code1}
 	end
-	return Auxiliary.AddRitualProcEqual2(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter)
+	return Auxiliary.AddRitualProcEqual2(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter,mat_filter)
 end
-function Auxiliary.AddRitualProcEqual2Code2(c,code1,code2,summon_location,grave_filter)
+function Auxiliary.AddRitualProcEqual2Code2(c,code1,code2,summon_location,grave_filter,mat_filter)
 	if not c:IsStatus(STATUS_COPYING_EFFECT) and c.fit_monster==nil then
 		local mt=getmetatable(c)
 		mt.fit_monster={code1,code2}
 	end
-	return Auxiliary.AddRitualProcEqual2(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1,code2),summon_location,grave_filter)
+	return Auxiliary.AddRitualProcEqual2(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1,code2),summon_location,grave_filter,mat_filter)
+end
+--Ritual Summon, geq monster lv
+function Auxiliary.AddRitualProcGreater2(c,filter,summon_location,grave_filter,mat_filter)
+	return Auxiliary.AddRitualProcUltimate(c,filter,Card.GetLevel,"Greater",summon_location,grave_filter,mat_filter)
+end
+function Auxiliary.AddRitualProcGreater2Code(c,code1,summon_location,grave_filter,mat_filter)
+	if not c:IsStatus(STATUS_COPYING_EFFECT) and c.fit_monster==nil then
+		local mt=getmetatable(c)
+		mt.fit_monster={code1}
+	end
+	return Auxiliary.AddRitualProcGreater2(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1),summon_location,grave_filter,mat_filter)
+end
+function Auxiliary.AddRitualProcGreater2Code2(c,code1,code2,summon_location,grave_filter,mat_filter)
+	if not c:IsStatus(STATUS_COPYING_EFFECT) and c.fit_monster==nil then
+		local mt=getmetatable(c)
+		mt.fit_monster={code1,code2}
+	end
+	return Auxiliary.AddRitualProcGreater2(c,Auxiliary.FilterBoolFunction(Card.IsCode,code1,code2),summon_location,grave_filter,mat_filter)
 end
 --add procedure to Pendulum monster, also allows registeration of activation effect
 function Auxiliary.EnablePendulumAttribute(c,reg)
@@ -1761,7 +1786,7 @@ function Auxiliary.IsMaterialListCode(c,code)
 	return false
 end
 function Auxiliary.IsMaterialListSetCard(c,setcode)
-	return c.material_setcode and c.material_setcode==setcode
+	return c.material_setcode and c.material_setcode&setcode==setcode
 end
 function Auxiliary.IsCodeListed(c,code)
 	if not c.card_code_list then return false end
@@ -1979,10 +2004,32 @@ function Auxiliary.GetMultiLinkedZone(tp)
 	end
 	return multi_linked_zone
 end
-function Auxiliary.CheckGroupRecursive(c,sg,g,f,min,max,ext_params)
+function Auxiliary.GetGroupKey(g)
+	local v=0
+	for c in Auxiliary.Next(g) do
+		math.randomseed(c:GetFieldID()+1)
+		v=v+math.random()
+	end
+	return v
+end
+function Auxiliary.LookupSubGroupCache(cache,sg)
+	local res=cache[Auxiliary.GetGroupKey(sg)]
+	return res,(res==1)
+end
+function Auxiliary.StoreSubGroupCache(cache,sg,res)
+	cache[Auxiliary.GetGroupKey(sg)]=(res and 1 or 0)
+end
+function Auxiliary.CheckGroupRecursive(c,sg,g,cache,f,min,max,ext_params)
 	sg:AddCard(c)
-	local res=(#sg>=min and #sg<=max and f(sg,table.unpack(ext_params)))
-		or (#sg<max and g:IsExists(Auxiliary.CheckGroupRecursive,1,sg,sg,g,f,min,max,ext_params))
+	local res=false
+	local found,data=Auxiliary.LookupSubGroupCache(cache,sg)
+	if found then
+		res=data
+	else
+		res=(#sg>=min and #sg<=max and f(sg,table.unpack(ext_params)))
+			or (#sg<max and g:IsExists(Auxiliary.CheckGroupRecursive,1,sg,sg,g,cache,f,min,max,ext_params))
+		Auxiliary.StoreSubGroupCache(cache,sg,res)
+	end
 	sg:RemoveCard(c)
 	return res
 end
@@ -1992,9 +2039,10 @@ function Group.CheckSubGroup(g,f,min,max,...)
 	if min>max then return false end
 	local ext_params={...}
 	local sg=Duel.GrabSelectedCard()
-	if #sg>max or #sg==max and not f(sg,...) then return false end
+	if #sg>max or #(g+sg)<min or #sg==max and not f(sg,...) then return false end
 	if #sg>=min and #sg<=max and f(sg,...) then return true end
-	return g:IsExists(Auxiliary.CheckGroupRecursive,1,sg,sg,g,f,min,max,ext_params)
+	local cache={}
+	return g:IsExists(Auxiliary.CheckGroupRecursive,1,sg,sg,g,cache,f,min,max,ext_params)
 end
 function Group.SelectSubGroup(g,tp,f,cancelable,min,max,...)
 	local min=min or 1
@@ -2002,13 +2050,15 @@ function Group.SelectSubGroup(g,tp,f,cancelable,min,max,...)
 	local ext_params={...}
 	local sg=Group.CreateGroup()
 	local fg=Duel.GrabSelectedCard()
+	if #fg>max or min>max or #(g+fg)<min then return nil end
 	for tc in aux.Next(fg) do
 		fg:SelectUnselect(sg,tp,false,false,min,max)
 	end
 	sg:Merge(fg)
 	local finish=(#sg>=min and #sg<=max and f(sg,...))
+	local cache={}
 	while #sg<max do
-		local cg=g:Filter(Auxiliary.CheckGroupRecursive,sg,sg,g,f,min,max,ext_params)
+		local cg=g:Filter(Auxiliary.CheckGroupRecursive,sg,sg,g,cache,f,min,max,ext_params)
 		finish=(#sg>=min and #sg<=max and f(sg,...))
 		if #cg==0 then break end
 		local cancel=not finish and cancelable
