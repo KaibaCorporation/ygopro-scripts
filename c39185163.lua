@@ -3,7 +3,7 @@ function c39185163.initial_effect(c)
 	--negate / banish
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(39185163,0))
-	e1:SetCategory(CATEGORY_DISABLE+CATEGORY_REMOVE)
+	e1:SetCategory(CATEGORY_DISABLE+CATEGORY_REMOVE+CATEGORY_GRAVE_ACTION)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_CHAINING)
 	e1:SetRange(LOCATION_MZONE)
@@ -31,28 +31,21 @@ function c39185163.disrmcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	c:RegisterFlagEffect(39185163,RESET_CHAIN,0,1)
 end
 function c39185163.disrmcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=re:GetHandler()
-	local race=c:GetRace()
-	local loc=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)
-	if loc==LOCATION_HAND then race=c:GetOriginalRace() end
-	if loc==LOCATION_MZONE and not c:IsLocation(LOCATION_MZONE) then race=c:GetPreviousRaceOnField() end
-	return race==RACE_ZOMBIE and not c:IsCode(39185163)
+	local race,code1,code2=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_RACE,CHAININFO_TRIGGERING_CODE,CHAININFO_TRIGGERING_CODE2)
+	return race&RACE_ZOMBIE>0 and code1~=39185163 and code2~=39185163
 end
 function c39185163.disrmtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1=Duel.IsChainDisablable(ev) and Duel.GetFlagEffect(tp,39185163)==0
 	local b2=Duel.IsExistingMatchingCard(Card.IsAbleToRemove,tp,LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,1,nil)
 		and Duel.GetFlagEffect(tp,39185164)==0
 	if chk==0 then return b1 or b2 end
-	Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
-	local g=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,nil)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
 end
 function c39185163.filter(c)
 	return c:IsType(TYPE_MONSTER) and c:IsAbleToRemove()
 end
 function c39185163.disrmop(e,tp,eg,ep,ev,re,r,rp)
 	local b1=Duel.IsChainDisablable(ev) and Duel.GetFlagEffect(tp,39185163)==0
-	local b2=Duel.IsExistingMatchingCard(aux.NecroValleyFilter(c39185163.filter),tp,LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,1,nil)
+	local b2=Duel.IsExistingMatchingCard(c39185163.filter,tp,LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,1,nil)
 		and Duel.GetFlagEffect(tp,39185164)==0
 	local op=0
 	if b1 and b2 then op=Duel.SelectOption(tp,aux.Stringid(39185163,1),aux.Stringid(39185163,2))
