@@ -128,7 +128,7 @@ function Auxiliary.EnableDualAttribute(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_ADD_TYPE)
-	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_IGNORE_IMMUNE)
 	e2:SetRange(LOCATION_MZONE+LOCATION_GRAVE)
 	e2:SetCondition(aux.DualNormalCondition)
 	e2:SetValue(TYPE_NORMAL)
@@ -1705,7 +1705,7 @@ function Auxiliary.PendOperation()
 				end
 				Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 				Auxiliary.GCheckAdditional=Auxiliary.PendOperationCheck(ft1,ft2,ft)
-				local g=tg:SelectSubGroup(tp,aux.TRUE,true,1,math.min(#tg,ft),ft1,ft2,ft)
+				local g=tg:SelectSubGroup(tp,aux.TRUE,true,1,math.min(#tg,ft))
 				Auxiliary.GCheckAdditional=nil
 				if not g then return end
 				if ce then
