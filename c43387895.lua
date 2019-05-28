@@ -3,6 +3,7 @@ function c43387895.initial_effect(c)
 	--fusion material
 	c:EnableReviveLimit()
 	aux.AddFusionProcFunRep(c,c43387895.ffilter,2,false)
+	aux.AddContactFusionProcedure(c,Card.IsReleasable,LOCATION_MZONE,0,Duel.Release,REASON_COST+REASON_FUSION+REASON_MATERIAL)
 	--spsummon condition
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
@@ -10,15 +11,6 @@ function c43387895.initial_effect(c)
 	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
 	e1:SetValue(c43387895.splimit)
 	c:RegisterEffect(e1)
-	--special summon rule
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_SPSUMMON_PROC)
-	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e2:SetRange(LOCATION_EXTRA)
-	e2:SetCondition(c43387895.spcon)
-	e2:SetOperation(c43387895.spop)
-	c:RegisterEffect(e2)
 	--copy effect
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(43387895,0))
@@ -36,32 +28,6 @@ function c43387895.ffilter(c)
 end
 function c43387895.splimit(e,se,sp,st)
 	return bit.band(st,SUMMON_TYPE_FUSION)==SUMMON_TYPE_FUSION
-end
-function c43387895.spfilter(c,fc)
-	return c43387895.ffilter(c) and c:IsCanBeFusionMaterial(fc)
-end
-function c43387895.spfilter1(c,tp,g)
-	return g:IsExists(c43387895.spfilter2,1,c,tp,c)
-end
-function c43387895.spfilter2(c,tp,mc)
-	return Duel.GetLocationCountFromEx(tp,tp,Group.FromCards(c,mc))>0
-end
-function c43387895.spcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	local g=Duel.GetReleaseGroup(tp):Filter(c43387895.spfilter,nil,c)
-	return g:IsExists(c43387895.spfilter1,1,nil,tp,g)
-end
-function c43387895.spop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=Duel.GetReleaseGroup(tp):Filter(c43387895.spfilter,nil,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local g1=g:FilterSelect(tp,c43387895.spfilter1,1,1,nil,tp,g)
-	local mc=g1:GetFirst()
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local g2=g:FilterSelect(tp,c43387895.spfilter2,1,1,mc,tp,mc)
-	g1:Merge(g2)
-	c:SetMaterial(g1)
-	Duel.Release(g1,REASON_COST+REASON_FUSION+REASON_MATERIAL)
 end
 function c43387895.copycost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():GetFlagEffect(41209827)==0 end
@@ -91,19 +57,19 @@ function c43387895.copyop(e,tp,eg,ep,ev,re,r,rp)
 		c:RegisterEffect(e1)
 		if not tc:IsType(TYPE_TRAPMONSTER) then
 			local cid=c:CopyEffect(code,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,1)
-			local e3=Effect.CreateEffect(c)
-			e3:SetDescription(aux.Stringid(43387895,1))
-			e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-			e3:SetCode(EVENT_PHASE+PHASE_END)
-			e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-			e3:SetCountLimit(1)
-			e3:SetRange(LOCATION_MZONE)
-			e3:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-			e3:SetLabelObject(e1)
-			e3:SetLabel(cid)
-			e3:SetOperation(c43387895.rstop)
-			c:RegisterEffect(e3)
 		end
+		local e3=Effect.CreateEffect(c)
+		e3:SetDescription(aux.Stringid(43387895,1))
+		e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		e3:SetCode(EVENT_PHASE+PHASE_END)
+		e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+		e3:SetCountLimit(1)
+		e3:SetRange(LOCATION_MZONE)
+		e3:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+		e3:SetLabelObject(e1)
+		e3:SetLabel(cid)
+		e3:SetOperation(c43387895.rstop)
+		c:RegisterEffect(e3)
 	end
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)

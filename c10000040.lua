@@ -25,14 +25,13 @@ function c10000040.initial_effect(c)
 	--win
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE+EFFECT_FLAG_DELAY)
+	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e4:SetOperation(c10000040.winop)
 	c:RegisterEffect(e4)
 end
 function c10000040.spfilter(c,code)
-	local code1,code2=c:GetOriginalCodeRule()
-	return code1==code or code2==code
+	return c:IsOriginalCodeRule(code)
 end
 function c10000040.spcon(e,c)
 	if c==nil then return true end
