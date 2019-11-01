@@ -1003,6 +1003,20 @@ function Auxiliary.AddFusionProcMix(c,sub,insf,...)
 	for i=1,#val do
 		if type(val[i])=='function' then
 			fun[i]=function(c,fc,sub,mg,sg) return val[i](c,fc,sub,mg,sg) and not c:IsHasEffect(6205579) end
+		elseif type(val[i])=='table' then
+			fun[i]=function(c,fc,sub,mg,sg)
+					for _,fcode in ipairs(val[i]) do
+						if type(fcode)=='function' then
+							if fcode(c,fc,sub,mg,sg) and not c:IsHasEffect(6205579) then return true end
+						else
+							if c:IsFusionCode(fcode) or (sub and c:CheckFusionSubstitute(fc)) then return true end
+						end
+					end
+					return false
+			end
+			for _,fcode in ipairs(val[i]) do
+				if type(fcode)~='function' then table.insert(mat,fcode) end
+			end
 		else
 			fun[i]=function(c,fc,sub) return c:IsFusionCode(val[i]) or (sub and c:CheckFusionSubstitute(fc)) end
 			table.insert(mat,val[i])
@@ -1101,6 +1115,20 @@ function Auxiliary.AddFusionProcMixRep(c,sub,insf,fun1,minc,maxc,...)
 	for i=1,#val do
 		if type(val[i])=='function' then
 			fun[i]=function(c,fc,sub,mg,sg) return val[i](c,fc,sub,mg,sg) and not c:IsHasEffect(6205579) end
+		elseif type(val[i])=='table' then
+			fun[i]=function(c,fc,sub,mg,sg)
+					for _,fcode in ipairs(val[i]) do
+						if type(fcode)=='function' then
+							if fcode(c,fc,sub,mg,sg) and not c:IsHasEffect(6205579) then return true end
+						else
+							if c:IsFusionCode(fcode) or (sub and c:CheckFusionSubstitute(fc)) then return true end
+						end
+					end
+					return false
+			end
+			for _,fcode in ipairs(val[i]) do
+				if type(fcode)~='function' then table.insert(mat,fcode) end
+			end
 		else
 			fun[i]=function(c,fc,sub) return c:IsFusionCode(val[i]) or (sub and c:CheckFusionSubstitute(fc)) end
 			table.insert(mat,val[i])
@@ -1296,8 +1324,19 @@ function Auxiliary.AddFusionProcCodeRep(c,code1,cc,sub,insf)
 	end
 	if c.material_count==nil then
 		local mt=getmetatable(c)
-		mt.material_count=1
-		mt.material={code1}
+		if type(code1)=='table' then
+			mt.material_count=0
+			mt.material={}
+			for _,fcode in ipairs(code1) do
+				if type(fcode)~='function' then
+					mt.material_count=mt.material_count+1
+					table.insert(mt.material,fcode)
+				end
+			end
+		else
+			mt.material_count=1
+			mt.material={code1}
+		end
 	end
 	Auxiliary.AddFusionProcMix(c,sub,insf,table.unpack(code))
 end
@@ -1512,7 +1551,7 @@ function Auxiliary.RitualCheckAdditional(c,lv,greater_or_equal)
 				end
 	end
 end
-function Auxiliary.RitualUltimateFilter(c,filter,e,tp,m1,m2,level_function,greater_or_equal)
+function Auxiliary.RitualUltimateFilter(c,filter,e,tp,m1,m2,level_function,greater_or_equal,gc)
 	if bit.band(c:GetType(),0x81)~=0x81 or (filter and not filter(c,e,tp)) or not c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,false,true) then return false end
 	local mg=m1:Filter(Card.IsCanBeRitualMaterial,c,c)
 	if m2 then
@@ -1522,6 +1561,10 @@ function Auxiliary.RitualUltimateFilter(c,filter,e,tp,m1,m2,level_function,great
 		mg=mg:Filter(c.mat_filter,c,tp)
 	else
 		mg:RemoveCard(c)
+	end
+	if gc then
+		if not mg:IsContains(gc) then return false end
+		Duel.SetSelectedCard(gc)
 	end
 	local lv=level_function(c)
 	Auxiliary.GCheckAdditional=Auxiliary.RitualCheckAdditional(c,lv,greater_or_equal)
@@ -1958,7 +2001,7 @@ function Auxiliary.IsMaterialListSetCard(c,setcode)
 	if type(c.material_setcode)=='table' then
 		for i,scode in ipairs(c.material_setcode) do
 			if setcode&0xfff==scode&0xfff and setcode&scode==setcode then return true end
-		end	
+		end
 	else
 		return setcode&0xfff==c.material_setcode&0xfff and setcode&c.material_setcode==setcode
 	end
