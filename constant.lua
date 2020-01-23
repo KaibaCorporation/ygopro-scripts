@@ -262,6 +262,7 @@ EFFECT_TYPE_QUICK_F			=0x0400		--诱发即时必发效果（熊猫龙等）
 EFFECT_TYPE_CONTINUOUS		=0x0800		--由事件觸發的輔助用效果/永續效果
 EFFECT_TYPE_XMATERIAL		=0x1000		--作为超量素材时超量怪兽获得的效果（十二兽）
 EFFECT_TYPE_GRANT			=0x2000		--使其他卡片获得效果（天气模样）
+EFFECT_TYPE_TARGET          =0x4000     --影响持续取的对象的效果（基本只用于魔陷）
 --========== Flags ==========	--效果的特殊性质
 EFFECT_FLAG_INITIAL			=0x0001		--可以发动的
 EFFECT_FLAG_FUNC_VALUE		=0x0002		--此效果的Value属性是函数
@@ -287,7 +288,7 @@ EFFECT_FLAG_SPSUM_PARAM		=0x100000	--指定召喚/规则特殊召唤的位置和
 EFFECT_FLAG_REPEAT			=0x200000	--神之化身的攻击力重复计算
 EFFECT_FLAG_NO_TURN_RESET	=0x400000	--发条等“这张卡在场上只能发动一次”的效果
 EFFECT_FLAG_EVENT_PLAYER	=0x800000	--视为对方玩家的效果（动作？）
-EFFECT_FLAG_OWNER_RELATE	=0x1000000	--持續成為對象
+EFFECT_FLAG_OWNER_RELATE	=0x1000000	--与效果owner关联的效果
 EFFECT_FLAG_CANNOT_INACTIVATE	=0x2000000	--發動不會被無效
 EFFECT_FLAG_CLIENT_HINT		=0x4000000	--客户端提示
 EFFECT_FLAG_CONTINUOUS_TARGET	=0x8000000	--建立持續對象的永續魔法、永續陷阱
@@ -459,6 +460,9 @@ EFFECT_REFLECT_BATTLE_DAMAGE	=202	--反弹战斗伤害
 EFFECT_PIERCE					=203	--贯穿伤害
 EFFECT_BATTLE_DESTROY_REDIRECT	=204	--战斗破坏时重新指定去向
 EFFECT_BATTLE_DAMAGE_TO_EFFECT	=205	--战斗伤害视为效果伤害
+EFFECT_BOTH_BATTLE_DAMAGE		=206    --战斗伤害由双方承受
+EFFECT_ALSO_BATTLE_DAMAGE		=207    --对自己的战斗伤害让对方也承受
+EFFECT_CHANGE_BATTLE_DAMAGE		=208    --改变战斗伤害
 EFFECT_TOSS_COIN_REPLACE		=220	--重新抛硬币
 EFFECT_TOSS_DICE_REPLACE		=221	--重新掷骰子
 EFFECT_FUSION_MATERIAL			=230	--指定融合素材的條件
@@ -661,6 +665,7 @@ HINT_ATTRIB				=7
 HINT_CODE				=8
 HINT_NUMBER				=9
 HINT_CARD				=10
+HINT_ZONE				=11
 --Card Hint
 CHINT_TURN				=1
 CHINT_CARD				=2
@@ -771,6 +776,7 @@ TIMING_TOGRAVE				=0x800000   	--进墓地时点
 TIMING_BATTLE_PHASE			=0x1000000  	--战斗阶段时点
 TIMING_EQUIP				=0x2000000  	--装备时点
 TIMING_BATTLE_STEP_END		=0x4000000  	--戰鬥步驟結束時
+TIMING_BATTLED				=0x8000000  	--伤害计算后时点
 ----组合时点
 TIMINGS_CHECK_MONSTER       =0x1c0 -- 怪兽正面上场
 --Global flag	--特殊标记

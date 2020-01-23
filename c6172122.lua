@@ -36,8 +36,12 @@ function c6172122.filter1(c,e)
 	return not c:IsImmuneToEffect(e)
 end
 function c6172122.filter2(c,e,tp,m,f,chkf)
-	return c:IsType(TYPE_FUSION) and aux.IsMaterialListSetCard(c,0x3b) and (not f or f(c))
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false) and c:CheckFusionMaterial(m,nil,chkf)
+	if not (c:IsType(TYPE_FUSION) and aux.IsMaterialListSetCard(c,0x3b) and (not f or f(c))
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)) then return false end
+	aux.FCheckAdditional=c.red_eyes_fusion_check or c6172122.fcheck
+	local res=c:CheckFusionMaterial(m,nil,chkf)
+	aux.FCheckAdditional=nil
+	return res
 end
 function c6172122.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
@@ -80,6 +84,7 @@ function c6172122.activate(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local tg=sg:Select(tp,1,1,nil)
 		local tc=tg:GetFirst()
+		aux.FCheckAdditional=tc.red_eyes_fusion_check or c6172122.fcheck
 		if sg1:IsContains(tc) and (sg2==nil or not sg2:IsContains(tc) or not Duel.SelectYesNo(tp,ce:GetDescription())) then
 			local mat1=Duel.SelectFusionMaterial(tp,tc,mg1,nil,chkf)
 			tc:SetMaterial(mat1)

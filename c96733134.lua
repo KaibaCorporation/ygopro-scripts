@@ -23,11 +23,12 @@ function c96733134.initial_effect(c)
 	c:RegisterEffect(e2)
 	--double damage
 	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e3:SetCode(EVENT_PRE_BATTLE_DAMAGE)
+	e3:SetType(EFFECT_TYPE_FIELD)
+	e3:SetCode(EFFECT_CHANGE_BATTLE_DAMAGE)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCondition(c96733134.damcon)
-	e3:SetOperation(c96733134.damop)
+	e3:SetTargetRange(LOCATION_MZONE,0)
+	e3:SetTarget(c96733134.damtg)
+	e3:SetValue(aux.ChangeBattleDamage(1,DOUBLE_DAMAGE))
 	c:RegisterEffect(e3)
 	--special summon
 	local e4=Effect.CreateEffect(c)
@@ -93,12 +94,8 @@ function c96733134.hspop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
-function c96733134.damcon(e,tp,eg,ep,ev,re,r,rp)
-	local tc=eg:GetFirst()
-	return ep~=tp and tc:IsType(TYPE_PENDULUM) and tc:GetBattleTarget()~=nil
-end
-function c96733134.damop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.ChangeBattleDamage(ep,ev*2)
+function c96733134.damtg(e,c)
+	return c:IsType(TYPE_PENDULUM) and c:GetBattleTarget()~=nil
 end
 function c96733134.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetCurrentPhase()>=PHASE_BATTLE_START and Duel.GetCurrentPhase()<=PHASE_BATTLE
@@ -112,14 +109,14 @@ function c96733134.spfilter(c,e,tp)
 	return c:IsFaceup() and c:IsSetCard(0x10f8,0x20f8)
 		and c:IsType(TYPE_PENDULUM) and not c:IsCode(96733134)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE)
+		and Duel.GetLocationCountFromEx(tp,tp,rc,c)>0
 end
 function c96733134.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCountFromEx(tp,tp,e:GetHandler())>0
-		and Duel.IsExistingMatchingCard(c96733134.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) end
+	if chk==0 then return Duel.IsExistingMatchingCard(c96733134.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,e:GetHandler()) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 function c96733134.spop(e,tp,eg,ep,ev,re,r,rp)
-	local ft=Duel.GetLocationCountFromEx(tp)
+	local ft=Duel.GetLocationCountFromEx(tp,tp,nil,TYPE_PENDULUM)
 	if ft==0 then return end
 	ft=math.min(ft,2)
 	if Duel.IsPlayerAffectedByEffect(tp,59822133) then
@@ -128,7 +125,7 @@ function c96733134.spop(e,tp,eg,ep,ev,re,r,rp)
 	local ect=c29724053 and Duel.IsPlayerAffectedByEffect(tp,29724053) and c29724053[tp]
 	if ect~=nil then ft=math.min(ft,ect) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,c96733134.spfilter,tp,LOCATION_EXTRA,0,1,ft,nil,e,tp)
+	local g=Duel.SelectMatchingCard(tp,c96733134.spfilter,tp,LOCATION_EXTRA,0,1,ft,nil,e,tp,nil)
 	if g:GetCount()>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
 	end
