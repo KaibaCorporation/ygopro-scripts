@@ -43,6 +43,9 @@ function c6172122.filter2(c,e,tp,m,f,chkf)
 	aux.FCheckAdditional=nil
 	return res
 end
+function c6172122.fcheck(tp,sg,fc)
+	return sg:IsExists(Card.IsFusionSetCard,1,nil,0x3b)
+end
 function c6172122.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		local chkf=tp
@@ -105,4 +108,5 @@ function c6172122.activate(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 		tc:RegisterEffect(e1)
 	end
+	aux.FCheckAdditional=nil
 end
