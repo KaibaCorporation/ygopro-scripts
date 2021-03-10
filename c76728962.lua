@@ -39,7 +39,7 @@ end
 c76728962.toss_coin=true
 function c76728962.filter(c,tp)
 	return c:IsReason(REASON_BATTLE+REASON_EFFECT) and bit.band(c:GetPreviousRaceOnField(),RACE_MACHINE)~=0
-		and bit.band(c:GetPreviousAttributeOnField(),ATTRIBUTE_DARK)~=0 and c:GetPreviousControler()==tp
+		and bit.band(c:GetPreviousAttributeOnField(),ATTRIBUTE_DARK)~=0 and c:IsPreviousControler(tp)
 		and c:IsPreviousLocation(LOCATION_MZONE) and c:IsPreviousPosition(POS_FACEUP)
 end
 function c76728962.condition(e,tp,eg,ep,ev,re,r,rp)
@@ -83,6 +83,7 @@ function c76728962.desop(e,tp,eg,ep,ev,re,r,rp)
 	local dg=g:Select(tp,1,ct,nil)
 	Duel.HintSelection(dg)
 	if Duel.Destroy(dg,REASON_EFFECT)~=0 and c1+c2+c3==3 then
+		Duel.BreakEffect()
 		Duel.Draw(tp,1,REASON_EFFECT)
 	end
 end

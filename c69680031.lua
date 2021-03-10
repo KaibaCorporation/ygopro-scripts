@@ -27,7 +27,7 @@ function c69680031.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 function c69680031.cfilter(c)
-	return c:GetSummonLocation()==LOCATION_EXTRA
+	return c:IsSummonLocation(LOCATION_EXTRA)
 end
 function c69680031.spcon(e,tp,eg,ep,ev,re,r,rp)
 	local ph=Duel.GetCurrentPhase()
@@ -69,7 +69,7 @@ function c69680031.spop(e,tp,eg,ep,ev,re,r,rp)
 		tc:RegisterEffect(e2)
 	end
 end
-function c69680031.atkcon(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+function c69680031.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	local ac=Duel.GetAttacker()
 	return ac:IsFaceup() and ac:IsControler(tp) and ac:IsSetCard(0x145)
 end

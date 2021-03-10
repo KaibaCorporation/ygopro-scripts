@@ -91,7 +91,7 @@ end
 function c50907446.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(c50907446.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE)
-	Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,1,tp,1)
+	Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,tp,1)
 end
 function c50907446.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
@@ -131,7 +131,7 @@ function c50907446.FShaddollSpFilter2(c,fc,tp,mc,chkf)
 		and (chkf==PLAYER_NONE or Duel.GetLocationCountFromEx(tp,tp,sg,fc)>0)
 end
 function c50907446.FShaddollCondition()
-	return  function(e,g,gc,chkf)
+	return	function(e,g,gc,chkf)
 			if g==nil then return aux.MustMaterialCheck(nil,e:GetHandlerPlayer(),EFFECT_MUST_BE_FMATERIAL) end
 			local c=e:GetHandler()
 			local mg=g:Filter(c50907446.FShaddollFilter,nil,c)
@@ -149,7 +149,7 @@ function c50907446.FShaddollCondition()
 		end
 end
 function c50907446.FShaddollOperation()
-	return  function(e,tp,eg,ep,ev,re,r,rp,gc,chkf)
+	return	function(e,tp,eg,ep,ev,re,r,rp,gc,chkf)
 			local c=e:GetHandler()
 			local mg=eg:Filter(c50907446.FShaddollFilter,nil,c)
 			local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)

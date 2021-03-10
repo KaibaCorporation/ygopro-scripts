@@ -55,6 +55,7 @@ TYPE_PENDULUM		=0x1000000	--灵摆
 TYPE_SPSUMMON		=0x2000000	--特殊召唤
 TYPE_LINK			=0x4000000	--连接
 --Attributes 属性
+ATTRIBUTE_ALL		=0x7f		--All
 ATTRIBUTE_EARTH		=0x01		--地
 ATTRIBUTE_WATER		=0x02		--水
 ATTRIBUTE_FIRE		=0x04		--炎
@@ -99,7 +100,7 @@ REASON_BATTLE		=0x20		--战斗破坏
 REASON_EFFECT		=0x40		--效果
 REASON_COST			=0x80		--用於代價或無法支付代價而破壞
 REASON_ADJUST		=0x100		--调整（御前试合）
-REASON_LOST_TARGET	=0x200		--失去装备对象（被破坏）/失去叠放对象（不是被破坏）
+REASON_LOST_TARGET	=0x200		--失去装备对象
 REASON_RULE			=0x400		--规则
 REASON_SPSUMMON		=0x800		--特殊召唤
 REASON_DISSUMMON	=0x1000		--召唤失败
@@ -117,6 +118,7 @@ REASON_DRAW			=0x2000000	--抽卡
 REASON_REDIRECT		=0x4000000	--改变去向（大宇宙，带菌等）
 REASON_REVEAL		=0x8000000	--翻开卡组（森罗）
 REASON_LINK			=0x10000000	--用于连接召唤
+REASON_LOST_OVERLAY =0x20000000	--超量素材随着超量怪兽离场
 --Location Reason
 LOCATION_REASON_TOFIELD		=0x1	--Duel.GetLocationCount()預設值,凱薩競技場
 LOCATION_REASON_CONTROL		=0x2	--Card.IsControlerCanBeChanged()使用
@@ -305,7 +307,7 @@ EFFECT_FLAG_COF				=0x20000000 --N/A
 EFFECT_FLAG_CVAL_CHECK		=0x40000000	--N/A
 EFFECT_FLAG_IMMEDIATELY_APPLY	=0x80000000	--卡在发动时效果就立即适用
 
-EFFECT_FLAG2_NAGA			=0x0001 --N/A
+EFFECT_FLAG2_MILLENNIUM_RESTRICT	=0x0001 --
 EFFECT_FLAG2_COF			=0x0002 --通常魔法卡在MP1以外发动（邪恶的仪式的特殊处理）
 --========== Codes ==========	--对永续性效果表示效果类型(EFFECT开头)，对诱发型效果表示触发效果的事件/时点(EVENT开头)
 EFFECT_IMMUNE_EFFECT			=1		--效果免疫
@@ -558,6 +560,7 @@ EFFECT_EXTRA_PENDULUM_SUMMON	=360	--extra pendulum summon
 EFFECT_MATERIAL_LIMIT			=361	--
 EFFECT_SET_BATTLE_ATTACK		=362    --战斗的伤害计算用设置的攻击力进行
 EFFECT_SET_BATTLE_DEFENSE		=363    --战斗的伤害计算用设置的守备力进行
+EFFECT_OVERLAY_RITUAL_MATERIAL  =364    --此卡的超量素材也能用于仪式召唤
 
 --下面是诱发效果的诱发事件、时点 （如果是TYPE_SINGLE则自己发生以下事件后触发，如果TYPE_FIELD则场上任何卡发生以下事件都触发）
 EVENT_STARTUP					=1000	--N/A
@@ -640,12 +643,12 @@ CATEGORY_REMOVE				=0x4    	--除外效果
 CATEGORY_TOHAND				=0x8    	--回手牌效果
 CATEGORY_TODECK				=0x10   	--回卡组效果
 CATEGORY_TOGRAVE			=0x20		--送去墓地效果
-CATEGORY_DECKDES			=0x40   	--從卡组送去墓地效果
+CATEGORY_DECKDES			=0x40   	--包含從卡组送去墓地或特殊召唤效果
 CATEGORY_HANDES				=0x80   	--捨棄手牌效果
 CATEGORY_SUMMON				=0x100  	--含召唤的效果
 CATEGORY_SPECIAL_SUMMON		=0x200  	--含特殊召唤的效果
 CATEGORY_TOKEN				=0x400		--含衍生物效果
-CATEGORY_GRAVE_ACTION		=0x800  	--包含涉及墓地的部分的效果（屋敷わらし）
+CATEGORY_GRAVE_ACTION		=0x800  	--包含特殊召喚以外移動墓地的卡的效果（屋敷わらし）
 CATEGORY_POSITION			=0x1000 	--改变表示形式效果
 CATEGORY_CONTROL			=0x2000 	--改变控制权效果
 CATEGORY_DISABLE			=0x4000 	--使效果无效效果
@@ -661,7 +664,7 @@ CATEGORY_COUNTER			=0x800000	--指示物效果
 CATEGORY_COIN				=0x1000000	--硬币效果
 CATEGORY_DICE				=0x2000000	--骰子效果
 CATEGORY_LEAVE_GRAVE		=0x4000000	--涉及墓地的效果(王家長眠之谷)
-CATEGORY_LVCHANGE			=0x8000000	--改变等级效果
+CATEGORY_GRAVE_SPSUMMON		=0x8000000	--包含從墓地特殊召喚的效果（屋敷わらし、冥神）
 CATEGORY_NEGATE				=0x10000000	--使发动无效效果
 CATEGORY_ANNOUNCE			=0x20000000	--發動時宣言卡名的效果
 CATEGORY_FUSION_SUMMON		=0x40000000	--融合召唤效果（暴走魔法阵）
@@ -828,3 +831,4 @@ ACTIVITY_CHAIN			=7		-- only available in custom counter
 --cards with double names
 CARD_MARINE_DOLPHIN		=78734254	--海洋海豚
 CARD_TWINKLE_MOSS		=13857930	--光輝苔蘚
+CARD_QUESTION		    =38723936	--谜题
